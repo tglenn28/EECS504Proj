@@ -1,0 +1,41 @@
+clc
+T = readtable('MOT17_03 output/MOT17-03-FRCNN.txt');
+
+start = 190
+end = 627
+
+data = T{start:end, :}
+
+corner_x1 = data(:,3);
+corner_y1 = data(:,4);
+w1 = data(:,3);
+h1 = data(:,3);
+
+x1 = corner_x1 + w1/2;
+y1 = corner_y1 + h1;
+
+M = [[1.66085552, 1.26628137, 294.421528]
+ [0.0518318303, 6.77169859, 631.124594]
+ [0.0000172772768, 0.000927897617, 1.00000000]];
+
+x_prime = zeros(length(x1),1);
+y_prime = zeros(length(y1),1);
+[x1(1),y1(1)]
+for i = 1:length(x1)
+    tilde = M*[x1(i); y1(i); 1];
+    x_prime(i) = tilde(1)/tilde(3);
+    y_prime(i) = tilde(2)/tilde(3);
+end
+[x_prime(1), y_prime(1)]    
+
+delta_x_prime = x_prime(2:end) - x_prime(1:end - 1);
+delta_y_prime = y_prime(2:end) - y_prime(1:end - 1);
+
+dist_unscaled_per_frame = sqrt(delta_x_prime.^2 + delta_y_prime.^2);
+
+dist_unscaled = sum(dist_unscaled_per_frame);
+
+scale_factor = 0.0099;
+dist_scaled = dist_unscaled*scale_factor
+dist_scaled_per_frame = dist_unscaled_per_frame*scale_factor;
+dist_scaled_per_frame_inch = dist_scaled_per_frame*3.281*12;
